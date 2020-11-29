@@ -18,18 +18,20 @@
   var FIRST_COMMENT = COMMENTS + "#comments " + COMMENT_THREAD;
   var APP = "ytd-app";
 
-  var app;
+  var APPLY = "Apply";
+  var LOAD_ALL = "Load All";
+
+  var appEl;
   var info = {};
-  var comments;
-  var allCommentsLoaded = false;
+  var commentsEl;
 
   function getCommentNodes(fromIndex) {
-    return Array.from(document.querySelectorAll(COMMENT_THREAD)).slice(
+    return Array.from(commentsEl.querySelectorAll(COMMENT_THREAD)).slice(
       fromIndex || 0
     );
   }
 
-  var container;
+  var formEl;
 
   var form = {
     button: null,
@@ -90,9 +92,8 @@
     try {
       obj.url = document.URL;
       obj.title = getText(
-        document.querySelector("h1.title.ytd-video-primary-info-renderer")
+        appEl.querySelector("h1.title.ytd-video-primary-info-renderer")
       );
-      var commentsEl = document.querySelector(COMMENTS + "#comments");
       obj.count = Number(
         getText(
           commentsEl.querySelector("ytd-comments-header-renderer #count")
@@ -103,41 +104,26 @@
   }
 
   function loadReplies() {
-    comments.querySelectorAll(VIEW_REPLIES_BUTTON).forEach(function (el) {
+    commentsEl.querySelectorAll(VIEW_REPLIES_BUTTON).forEach(function (el) {
       var button = el.querySelector(PAPER_BUTTON);
       if (button) {
         button.click();
       }
     });
-    waitToLoad(loadReplies, function () {
-      return comments.querySelectorAll(VIEW_REPLIES_BUTTON).length > 0;
-    });
   }
 
-  var appScrollHeight = 0;
+  function isEverythingLoaded() {
+    return commentsEl.querySelectorAll(VIEW_REPLIES_BUTTON).length === 0;
+  }
 
   function loadComments() {
-    window.scrollTo(0, app.scrollHeight);
-    waitToLoad(
-      function () {
-        if (!allCommentsLoaded) {
-          loadComments();
-          loadReplies();
-          if (appScrollHeight !== app.scrollHeight) {
-            appScrollHeight = app.scrollHeight;
-          } else {
-            allCommentsLoaded = true;
-            form.button.disabled = false;
-          }
-        }
-      },
-      function () {
-        return (
-          allCommentsLoaded ||
-          document.querySelectorAll(COMMENT).length <= info.count
-        );
-      }
-    );
+    window.scrollTo(0, appEl.scrollHeight);
+    loadReplies();
+    if (!isEverythingLoaded()) {
+      setTimeout(loadComments, 100);
+    } else {
+      form.button.disabled = false;
+    }
   }
 
   function getData() {
@@ -151,57 +137,61 @@
   }
 
   function attachForm() {
-    var firstEl = document.querySelector(FIRST_COMMENT);
-    container = document.createElement("div");
-    container.classList.add("yca");
-    container.style =
+    var firstEl = commentsEl.querySelector(FIRST_COMMENT);
+    formEl = document.createElement("form");
+    formEl.classList.add("yca");
+    formEl.style =
       makeStyle(100) + "justify-content: space-between; margin-bottom: 16px;";
-    firstEl.parentElement.insertBefore(container, firstEl);
-
-    var button = document.createElement("button");
-    button.innerText = "Load All";
-    button.style = "width: 14%";
-    button.addEventListener("click", function (e) {
-      loadComments();
-    });
-    container.appendChild(button);
+    firstEl.parentElement.insertBefore(formEl, firstEl);
 
     var authorInput = document.createElement("input");
     authorInput.style = makeStyle(24);
     authorInput.placeholder = "Search Author name";
-    container.appendChild(authorInput);
+    formEl.appendChild(authorInput);
     form.author = authorInput;
 
     var keyworkInput = document.createElement("textarea");
-    keyworkInput.style = makeStyle(44);
+    keyworkInput.style = makeStyle(54);
     keyworkInput.placeholder = "Search: from hyderabad, india, email";
-    container.appendChild(keyworkInput);
+    formEl.appendChild(keyworkInput);
     form.input = keyworkInput;
 
     button = document.createElement("button");
-    button.innerText = "Apply";
+    button.innerText = LOAD_ALL;
     button.style = "width: 14%";
     button.addEventListener("click", function (e) {
-      var data = getData();
-      var pre = document.createElement("pre");
-      pre.innerHTML = JSON.stringify(data, null, 2);
-      pre.id = "content-text";
-      pre.classList.add("ytd-comment-renderer");
-      pre.style = "border: 1px solid #CCCCCC";
-      firstEl.parentElement.insertBefore(pre, firstEl);
+      e.preventDefault();
+      if (e.target.innerText === LOAD_ALL) {
+        e.target.disabled = true;
+        e.target.innerText = APPLY;
+        loadComments();
+      } else {
+        attachData();
+      }
     });
-    button.disabled = true;
     form.button = button;
+    formEl.appendChild(button);
+  }
 
-    container.appendChild(button);
+  function attachData() {
+    var data = getData();
+    var pre = document.createElement("pre");
+    pre.innerHTML = JSON.stringify(data, null, 2);
+    pre.id = "content-text";
+    pre.classList.add("ytd-comment-renderer");
+    pre.style = "border: 1px solid #CCCCCC";
+    var wrapper = document.createElement("div");
+    wrapper.style = "max-height: 100vh; overflow-y:auto;margin: 16px;";
+    wrapper.appendChild(pre);
+    var firstEl = commentsEl.querySelector(FIRST_COMMENT);
+    firstEl.parentElement.insertBefore(wrapper, firstEl);
   }
 
   function _init() {
-    debugger;
-    app = document.querySelector(APP);
-    comments = document.querySelector(COMMENTS);
+    appEl = document.querySelector(APP);
+    commentsEl = appEl.querySelector(COMMENTS);
     info = getInfo();
-    var existing = comments.querySelector("div.yca");
+    var existing = commentsEl.querySelector("form.yca");
     if (existing) {
       existing.parentElement.removeChild(existing);
     }
