@@ -1,0 +1,33 @@
+{
+  "name": "Youtube Comments Analyser",
+  "version": "1.0",
+  "description": "Analyse Youtube comments",
+  "manifest_version": 2,
+  "icons": {
+    "16": "images/yca.png",
+    "32": "images/yca.png",
+    "48": "images/yca.png",
+    "128": "images/yca.png"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://*.youtube.com/watch*"
+      ],
+      "js": [
+        "content-script.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
+  "background": {
+    "scripts": [
+      "background.js"
+    ]
+  },
+  "permissions": [
+    "https://*.youtube.com/watch*",
+    "tabs",
+    "webNavigation"
+  ]
+}
