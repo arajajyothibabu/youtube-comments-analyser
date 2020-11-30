@@ -196,6 +196,9 @@
   function getData(filters) {
     var obj = Object.assign({}, info);
     obj.comments = getComments(0, filters);
+    obj.filteredCount = obj.comments.reduce(function (acc, com) {
+      return acc + 1 + com.replies.length;
+    }, 0);
     return obj;
   }
 
@@ -260,7 +263,7 @@
     overlayContent.appendChild(document.createTextNode("Loading comments..."));
     overlayContent.appendChild(document.createElement("br"));
     overlayContent.appendChild(
-      document.createTextNode("If you feel it's talking longer, ")
+      document.createTextNode("If you feel it's taking longer, ")
     );
     overlayContent.style = "color: #F1F1F1; padding-top: 40vh;font-size: 18px;";
 
