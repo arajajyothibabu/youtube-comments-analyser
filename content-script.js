@@ -228,13 +228,13 @@
 
     var authorInput = document.createElement("input");
     authorInput.style = makeStyle(24);
-    authorInput.placeholder = "Search Author name";
+    authorInput.placeholder = "Author name";
     formEl.appendChild(authorInput);
     form.author = authorInput;
 
     var keyworkInput = document.createElement("textarea");
     keyworkInput.style = makeStyle(44);
-    keyworkInput.placeholder = "Search: from hyderabad, india, email";
+    keyworkInput.placeholder = "from NYC, UK, india, email etc.";
     formEl.appendChild(keyworkInput);
     form.search = keyworkInput;
 
