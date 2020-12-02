@@ -1,12 +1,12 @@
 {
-  "name": "Youtube Comments Analyser",
-  "version": "1.0",
-  "description": "Analyse Youtube comments",
+  "name": "YouTube Comments Analyser",
+  "version": "0.8.9",
+  "description": "Analyse YouTube comments with client search.",
   "manifest_version": 2,
   "icons": {
-    "16": "images/yca.png",
-    "32": "images/yca.png",
-    "48": "images/yca.png",
+    "16": "images/yca16.png",
+    "32": "images/yca32.png",
+    "48": "images/yca48.png",
     "128": "images/yca.png"
   },
   "content_scripts": [

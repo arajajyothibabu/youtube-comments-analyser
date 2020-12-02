@@ -65,11 +65,9 @@
   }
 
   function getCommentNodes(fromIndex, filters) {
-    var nodes = [];
-    commentsEl.querySelectorAll(COMMENT_THREAD).forEach(function (el) {
-      applyFilters(el, nodes, filters);
-    });
-    return nodes.slice(fromIndex || 0);
+    return Array.from(commentsEl.querySelectorAll(COMMENT_THREAD)).slice(
+      fromIndex || 0
+    );
   }
 
   var formEl;
@@ -109,10 +107,10 @@
     return obj;
   }
 
-  function applyFilters(el, nodes, filters) {
+  function applyFilters(el, nodes, filters, hide) {
     el.hidden = false;
     if (filters) {
-      if (filterMatched(el, filters)) {
+      if (filterMatched(el, filters) || !hide) {
         nodes.push(el);
       } else {
         el.hidden = true;
@@ -127,7 +125,7 @@
     el.querySelectorAll(
       COMMENT_REPLIES + " " + "#loaded-replies" + ">" + COMMENT
     ).forEach(function (el) {
-      applyFilters(el, nodes, filters);
+      applyFilters(el, nodes, filters, true);
     });
     return nodes;
   }
@@ -138,17 +136,21 @@
    */
   function getCommentThread(el, filters) {
     var obj = {};
-    try {
-      obj = getComment(el.querySelector(COMMENT + "#comment"));
-      obj.replies = getReplyNodes(el, filters).map(getComment);
-    } catch (e) {}
+    obj = getComment(el.querySelector(COMMENT + "#comment"));
+    obj.replies = getReplyNodes(el, filters).map(getComment);
+    if (filters && !obj.replies.length && !filterMatched(el, filters)) {
+      el.hidden = true;
+      return null;
+    }
     return obj;
   }
 
   function getComments(fromIndex, filters) {
-    return getCommentNodes(fromIndex, filters).map(function (el) {
-      return getCommentThread(el, filters);
-    });
+    return getCommentNodes(fromIndex)
+      .map(function (el) {
+        return getCommentThread(el, filters);
+      })
+      .filter((_) => _);
   }
 
   function getInfo() {
@@ -186,19 +188,21 @@
     if (!isEverythingLoaded() && !FORCE_STOP_LOADING) {
       setTimeout(loadComments, 100);
     } else {
-      if (FORCE_STOP_LOADING) {
+      if (!FORCE_STOP_LOADING) {
         form.loadAll.disabled = true;
       }
+      window.scrollTo(0, commentsEl.offsetTop || 720);
       overlay.hidden = true;
     }
   }
 
   function getData(filters) {
     var obj = Object.assign({}, info);
-    obj.comments = getComments(0, filters);
-    obj.filteredCount = obj.comments.reduce(function (acc, com) {
+    var comments = getComments(0, filters);
+    obj.filteredCount = comments.reduce(function (acc, com) {
       return acc + 1 + com.replies.length;
     }, 0);
+    obj.comments = comments;
     return obj;
   }
 
@@ -221,7 +225,6 @@
       e.preventDefault();
       overlay.hidden = false;
       loadComments();
-      e.target.disabled = true;
     });
     form.loadAll = button;
     formEl.appendChild(button);
@@ -275,7 +278,7 @@
       FORCE_STOP_LOADING = true;
     });
 
-    overlayContent.appendChild(document.createTextNode(" to cancel."));
+    overlayContent.appendChild(document.createTextNode(" to stop."));
     overlay.appendChild(overlayContent);
     formEl.appendChild(overlay);
     /**
@@ -305,7 +308,6 @@
         obj.searchRegex = regex;
       } catch (e) {}
     }
-    console.log(obj);
     return obj.author || obj.searchRegex ? obj : null;
   }
 
@@ -322,8 +324,7 @@
     wrapper.classList.add(YCA_DATA);
     wrapper.style = "max-height: 100vh; overflow-y:auto;margin: 16px;";
     wrapper.appendChild(pre);
-    var firstEl = commentsEl.querySelector(FIRST_COMMENT);
-    firstEl.parentElement.insertBefore(wrapper, firstEl);
+    formEl.parentElement.insertBefore(wrapper, formEl.nextSibling);
   }
 
   function removeIfExisting(query) {
