@@ -136,6 +136,7 @@
    */
   function getCommentThread(el, filters) {
     var obj = {};
+    el.hidden = false;
     obj = getComment(el.querySelector(COMMENT + "#comment"));
     obj.replies = getReplyNodes(el, filters).map(getComment);
     if (filters && !obj.replies.length && !filterMatched(el, filters)) {
